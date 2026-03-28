@@ -1,40 +1,36 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
+import tensorflow as tf
+from tensorflow.keras import layers, models, optimizers
 
-class QNetwork(nn.Module):
+class QNetwork(tf.keras.Model):
     def __init__(self, lr=0.01):
         super(QNetwork, self).__init__()
-        # Input: Nfloor, Npeople, Nstop, action
-        self.fc1 = nn.Linear(4, 8)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(8, 1)
+        # Input features: Nfloor, Npeople, Nstop, action/el.id
+        self.dense1 = layers.Dense(8, activation='relu')
+        self.dense2 = layers.Dense(1)
         
-        # Optimizer
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
-        self.criterion = nn.MSELoss()
+        # Optimizer and Loss
+        self.optimizer = optimizers.Adam(learning_rate=lr)
+        self.loss_fn = tf.keras.losses.MeanSquaredError()
 
-    def forward(self, x):
+    def call(self, x):
         """
         x is a tensor of shape (batch, 4)
         Returns the Q-value Q(s, a).
         For cost minimization, lower Q is better.
         """
-        out = self.fc1(x)
-        out = self.relu(out)
-        out = self.fc2(out)
+        out = self.dense1(x)
+        out = self.dense2(out)
         return out
 
     def update(self, s, target_q):
         """
         Perform a single gradient descent step.
         """
-        self.optimizer.zero_grad()
+        with tf.GradientTape() as tape:
+            pred_q = self.call(s)
+            loss = self.loss_fn(target_q, pred_q)
+            
+        grads = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
         
-        # s is shape (batch, 4), target_q is shape (batch, 1)
-        pred_q = self.forward(s)
-        loss = self.criterion(pred_q, target_q)
-        loss.backward()
-        self.optimizer.step()
-        
-        return loss.item()
+        return float(loss)

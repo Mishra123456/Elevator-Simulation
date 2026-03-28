@@ -1,4 +1,4 @@
-import torch
+import tensorflow as tf
 import numpy as np
 import math
 import random
@@ -58,7 +58,7 @@ def train():
     
     state, p, done = env._run_sim_until_next_decision()
     
-    print(f"Starting 10-hour simulation (Arrival Rate: {env.arrival_rate}, LR: {q_net.optimizer.param_groups[0]['lr']})...")
+    print(f"Starting 10-hour simulation (Arrival Rate: {env.arrival_rate}, LR: {q_net.optimizer.learning_rate.numpy()})...")
     sys.stdout.flush()
     
     while env.time < SIMULATION_TIME:
@@ -125,9 +125,8 @@ def train():
             f = [n_floor/10.0, n_people/10.0, n_stop/10.0, float(el.id)/4.0]
             features_list.append(f)
             
-            f_tensor = torch.tensor([f], dtype=torch.float32)
-            with torch.no_grad():
-                q_val = q_net(f_tensor).item()
+            f_tensor = tf.convert_to_tensor([f], dtype=tf.float32)
+            q_val = float(q_net(f_tensor)[0][0])
             qs.append(q_val)
             
         temp = max(MIN_TEMP, BASE_TEMP * math.exp(-current_time / TEMP_DECAY))
@@ -141,8 +140,8 @@ def train():
             min_q_next = min(qs)
             target_q = r + df * min_q_next 
             
-            target_tensor = torch.tensor([[target_q]], dtype=torch.float32)
-            s_prev_tensor = torch.tensor([s_prev_features], dtype=torch.float32)
+            target_tensor = tf.convert_to_tensor([[target_q]], dtype=tf.float32)
+            s_prev_tensor = tf.convert_to_tensor([s_prev_features], dtype=tf.float32)
             
             loss = q_net.update(s_prev_tensor, target_tensor)
             total_loss += loss
