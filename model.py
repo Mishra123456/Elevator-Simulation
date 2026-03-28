@@ -8,10 +8,14 @@ class QNetwork(tf.keras.Model):
         self.dense1 = layers.Dense(8, activation='relu')
         self.dense2 = layers.Dense(1)
         
+        # Build the model eagerly to instantiate variables before tf.function trace
+        self.build(tf.TensorShape([None, 4]))
+        
         # Optimizer and Loss
         self.optimizer = optimizers.Adam(learning_rate=lr)
         self.loss_fn = tf.keras.losses.MeanSquaredError()
 
+    @tf.function
     def call(self, x):
         """
         x is a tensor of shape (batch, 4)
@@ -22,15 +26,16 @@ class QNetwork(tf.keras.Model):
         out = self.dense2(out)
         return out
 
+    @tf.function
     def update(self, s, target_q):
         """
         Perform a single gradient descent step.
         """
         with tf.GradientTape() as tape:
-            pred_q = self.call(s)
+            pred_q = self(s)
             loss = self.loss_fn(target_q, pred_q)
             
         grads = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
         
-        return float(loss)
+        return loss

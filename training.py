@@ -143,7 +143,7 @@ def train():
             target_tensor = tf.convert_to_tensor([[target_q]], dtype=tf.float32)
             s_prev_tensor = tf.convert_to_tensor([s_prev_features], dtype=tf.float32)
             
-            loss = q_net.update(s_prev_tensor, target_tensor)
+            loss = float(q_net.update(s_prev_tensor, target_tensor))
             total_loss += loss
             update_count += 1
             

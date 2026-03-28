@@ -2,11 +2,11 @@
 ==================================================
                SIMULATION SUMMARY
 ==================================================
-Total Passengers Served: 24543
-Overall Average Wait Time: 2303.42 s
-Overall Maximum Wait Time: 21184.33 s
-Percentage of Wait > 60s: 62.28 %
-Total Training Steps: 28719
+Total Passengers Served: 24689
+Overall Average Wait Time: 2482.12 s
+Overall Maximum Wait Time: 24256.30 s
+Percentage of Wait > 60s: 61.90 %
+Total Training Steps: 28627
 Final Exploration Temp: 0.1000
-Average Loss: 900.1396
+Average Loss: 990.1070
 ==================================================
